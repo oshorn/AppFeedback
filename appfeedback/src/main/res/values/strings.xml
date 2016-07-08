@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AppFeedback</string>
+    <string name="note">说明</string>
 </resources>

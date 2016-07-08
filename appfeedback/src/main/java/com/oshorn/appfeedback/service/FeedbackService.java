@@ -2,6 +2,7 @@ package com.oshorn.appfeedback.service;
 
 import android.app.AlertDialog;
 import android.app.Service;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
@@ -15,6 +16,7 @@ import android.widget.LinearLayout;
 
 import com.oshorn.appfeedback.FeedbackManager;
 import com.oshorn.appfeedback.R;
+import com.oshorn.appfeedback.control.DetailDialog;
 
 
 public class FeedbackService extends Service {
@@ -47,7 +49,7 @@ public class FeedbackService extends Service {
         wmParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
         wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
 
-        LayoutInflater inflater = LayoutInflater.from(getApplication());
+        final LayoutInflater inflater = LayoutInflater.from(getApplication());
         mLayout = (LinearLayout)inflater.inflate(R.layout.float_layout, null);
         mButton = (ImageButton)mLayout.findViewById(R.id.float_image);
 
@@ -67,12 +69,23 @@ public class FeedbackService extends Service {
         mButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog dialog = new AlertDialog.Builder(FeedbackManager.getInstance().getActivity()).setTitle("标题")
-                        .setMessage("简单消息框")
-                        .setPositiveButton("确定", null).create();
-                dialog.getWindow().setWindowAnimations(R.style.dialogAnimation);
-
+                mWindowManager.removeView(mLayout);
+                DetailDialog dialog = new DetailDialog(FeedbackManager.getInstance().getActivity());
+                dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        if(!mLayout.isAttachedToWindow()){
+                            mWindowManager.addView(mLayout, wmParams);
+                        }
+                    }
+                });
                 dialog.show();
+//                AlertDialog dialog = new AlertDialog.Builder(FeedbackManager.getInstance().getActivity()).setTitle("标题")
+//                        .setMessage("简单消息框")
+//                        .setPositiveButton("确定", null).create();
+//                dialog.getWindow().setWindowAnimations(R.style.dialogAnimation);
+//
+//                dialog.show();
             }
         });
     }
@@ -80,7 +93,9 @@ public class FeedbackService extends Service {
 
     @Override
     public void onDestroy() {
-        mWindowManager.removeView(mLayout);
+        if(mLayout.isAttachedToWindow()){
+            mWindowManager.removeView(mLayout);
+        }
         super.onDestroy();
     }
 }
